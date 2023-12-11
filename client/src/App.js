@@ -18,6 +18,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import { refreshToken } from "./apiCalls/api";
 
 function Copyright(props) {
   return (
@@ -77,7 +78,7 @@ function App() {
     event.preventDefault();
     console.log("?.accessToken", user?.accessToken);
     console.log("?.accessToken", user);
-  
+
     try {
       const res = await deleteUser(id, user?.accessToken);
       // Handle success case
@@ -97,41 +98,68 @@ function App() {
 
 
   //Refresh Token
-  const refreshToken = async () => {
-    try {
-      const res = await refreshToken(user?.refreshToken);
-      // Handle success case
-      toast.success("You have successfully refreshed your token");
-      
-      setUser({
-        ...user,
-        accessToken: res.data.accessToken,
-        refreshToken: res.data.refreshToken,
-      });
-  
-    } catch (err) {
-      // Handle error case
-      toast.error(err.message || "An error occurred");
-      console.log("Sorry, an error occurred", err);
-    }
-  };
+ 
 
-  const axiosJWT = axios.create()
+  // const axiosJWT = axios.create();
 
-  axiosJWT.interceptors.request.use(
-    async (config) => {
-      let currentDate = new Date();
-      const decodedToken = jwtDecode(user.accessToken);
-      if (decodedToken.exp * 1000 < currentDate.getTime()) {
-        const data = await refreshToken();
-        config.headers["authorization"] = "Bearer " + data.accessToken;
+  // axiosJWT.interceptors.request.use(
+  //   async (config) => {
+  //     try {
+  //       let currentDate = new Date();
+  //       const decodedToken = jwtDecode(user.accessToken);
+  //       console.log("Token expiration time:", decodedToken.exp * 1000);
+
+  //       if (decodedToken.exp * 1000 < currentDate.getTime()) {
+  //         const data = await refreshAccessToken(); // Make sure this function returns the expected data
+  //         config.headers["Authorization"] = "Bearer " + data.accessToken;
+  //       }
+
+  //       return config;
+  //     } catch (error) {
+  //       console.error("Interceptor error:", error);
+  //       return Promise.reject(error);
+  //     }
+  //   },
+  //   (error) => {
+  //     console.error("Interceptor error:", error);
+  //     return Promise.reject(error);
+  //   }
+  // );
+
+  React.useEffect(() => {
+    const refreshInterval = setInterval(() => {
+      if (user!==null) {
+        let currentDate = new Date();
+        const decodedToken = jwtDecode(user?.accessToken);
+        console.log("Token expiration time:", decodedToken.exp * 1000);
+        console.log("currentDate.getTime", currentDate.getTime());
+
+        if (decodedToken.exp * 1000 < currentDate.getTime()) {
+          const refreshAccessToken = async () => {
+            try {
+              const res = await refreshToken(user?.refreshToken);
+              // Handle success case
+              toast.success("You have successfully refreshed your token");
+              console.log("res", res);
+              setUser({
+                ...user,
+                accessToken: res.accessToken,
+                refreshToken: res.refreshToken,
+              });
+            } catch (err) {
+              // Handle error case
+              toast.error(err.message || "An error occurred");
+              console.log("Sorry, an error occurred", err);
+            }
+          };
+          refreshAccessToken();
+        }
       }
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
-    }
-  );
+    }, 500); // Set interval to 500 milliseconds (0.5 seconds)
+
+    // Clear the interval when the component unmounts or when user changes
+    return () => clearInterval(refreshInterval);
+  }, [user]);
 
   return (
     <div className='App' >
@@ -231,7 +259,7 @@ function App() {
           style={{ justifyContent: "center", alignItems: "center", display: "flex", flexDirection: "column" }}
         >
           <Typography component="h1" variant="h7" style={{ marginTop: "5%" }}> Hey Guys 👋 ! This is just a small demo on how JWT works the userid 1 is an Admin
-           so can delete bith the users but the userid 2 can't delete userid 1 when logged. Moreover just check out the refresh token and logout console logs are in place as well. Hope you enjoy! </Typography>
+            so can delete bith the users but the userid 2 can't delete userid 1 when logged. Moreover just check out the refresh token and logout console logs are in place as well. Hope you enjoy! </Typography>
           <Typography component="h1" variant="h5" style={{ marginTop: "13%" }}> Welcome {user.username} </Typography>
           <Typography component="h1" variant="h5"> You are {user.isAdmin ? "Admin" : "User"} </Typography>
           <Button
