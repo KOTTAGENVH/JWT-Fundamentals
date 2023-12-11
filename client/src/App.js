@@ -131,8 +131,8 @@ function App() {
       if (user!==null) {
         let currentDate = new Date();
         const decodedToken = jwtDecode(user?.accessToken);
-        console.log("Token expiration time:", decodedToken.exp * 1000);
-        console.log("currentDate.getTime", currentDate.getTime());
+        // console.log("Token expiration time:", decodedToken.exp * 1000);
+        // console.log("currentDate.getTime", currentDate.getTime());
 
         if (decodedToken.exp * 1000 < currentDate.getTime()) {
           const refreshAccessToken = async () => {
