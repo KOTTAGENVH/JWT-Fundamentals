@@ -1,7 +1,9 @@
 const express = require("express");
+const cors = require("cors");
 const app = express();
 const jwt = require("jsonwebtoken");
 app.use(express.json());
+app.use(cors('http://localhost:3000'));
 
 const users = [
     {
